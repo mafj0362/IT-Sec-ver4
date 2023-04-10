@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "C:\\Users\\malte\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\malte\\.nuget\\packages"
+    ]
+  }
+}

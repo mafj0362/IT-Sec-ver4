@@ -1,0 +1,142 @@
+﻿using System;
+using System.Text.Json;
+using System.IO;
+using System.Security.Cryptography;
+using System.Collections.Generic;
+
+namespace ItSec_ver4
+{
+    class Kryptering
+    {
+        public static byte[] EncryptStringToBytes_Aes(string plainText, byte[] Key, byte[] IV)
+        {
+            // Check arguments.
+            if (plainText == null || plainText.Length <= 0)
+                throw new ArgumentNullException("plainText");
+            if (Key == null || Key.Length <= 0)
+                throw new ArgumentNullException("Key");
+            if (IV == null || IV.Length <= 0)
+                throw new ArgumentNullException("IV");
+            byte[] encrypted;
+
+            // Create an Aes object
+            // with the specified key and IV.
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = Key;
+                aesAlg.IV = IV;
+
+                // Create an encryptor to perform the stream transform.
+                ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+
+                // Create the streams used for encryption.
+                using (MemoryStream msEncrypt = new MemoryStream())
+                {
+                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    {
+                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                        {
+                            //Write all data to the stream.
+                            swEncrypt.Write(plainText);
+                        }
+                        encrypted = msEncrypt.ToArray();
+                    }
+                }
+            }
+
+            // Return the encrypted bytes from the memory stream.
+            return encrypted;
+        }
+        public static string DecryptStringFromBytes_Aes(byte[] cipherText, byte[] Key, byte[] IV)
+        {
+            // Check arguments.
+            if (cipherText == null || cipherText.Length <= 0)
+                throw new ArgumentNullException("cipherText");
+            if (Key == null || Key.Length <= 0)
+                throw new ArgumentNullException("Key");
+            if (IV == null || IV.Length <= 0)
+                throw new ArgumentNullException("IV");
+
+            // Declare the string used to hold
+            // the decrypted text.
+            string plaintext = null;
+
+            // Create an Aes object
+            // with the specified key and IV.
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = Key;
+                aesAlg.IV = IV;
+
+                // Create a decryptor to perform the stream transform.
+                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+                // Create the streams used for decryption.
+                using (MemoryStream msDecrypt = new MemoryStream(cipherText))
+                {
+                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                        {
+
+                            // Read the decrypted bytes from the decrypting stream
+                            // and place them in a string.
+                            plaintext = srDecrypt.ReadToEnd();
+                        }
+                    }
+                }
+            }
+
+            return plaintext;
+        }
+
+        //genererar en random IV med AES klassen
+        public static byte[] GenerateIV()
+        {
+            Aes iv = Aes.Create();
+            return iv.IV;
+        }
+        //genererar en random SecretKey med AES klassen.
+        public static byte[] GenerateSecretKey()
+        {
+            Aes secretkey = Aes.Create();
+
+            return secretkey.Key;
+        }
+
+        public static byte[] GenerateVaultKey(string masterpassword, byte[] secretkey)
+        {
+            Aes Vault = Aes.Create();
+
+            Rfc2898DeriveBytes vaultkey = new Rfc2898DeriveBytes(masterpassword, secretkey);
+            Vault.Key = vaultkey.GetBytes(16);
+
+            return Vault.Key;
+        }
+
+        public static byte[] EncryptVault(byte[] vaultkey)
+        {
+
+            return vaultkey;
+            //using (Aes aes = Aes.Create())
+            //{
+            //    aes.Key = vaultKey;
+            //    aes.GenerateIV();
+            //    byte[] iv = aes.IV;
+
+            //    using (MemoryStream ms = new MemoryStream())
+            //    {
+            //        ms.Write(iv, 0, iv.Length);
+            //        using (CryptoStream cs = new CryptoStream(ms, aes.CreateEncryptor(), CryptoStreamMode.Write))
+            //        {
+            //            cs.Write(data, 0, data.Length);
+            //            cs.Close();
+            //        }
+            //        byte[] encryptedData = ms.ToArray();
+            //        return encryptedData;
+            //    }
+            //}
+        }
+
+    }
+}
